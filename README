@@ -1,0 +1,10 @@
+TaskPad - A simple todo list application for the Haiku desktop. It's focus
+is on allowing the user to create and check off tasks, while keeping all file
+management invisible, and saving behind the scenes.
+
+TODO:
+- Add about info
+- Add ability to check tasks off
+- Add icons
+
+Desirable, but not yet necessary

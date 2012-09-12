@@ -1,0 +1,168 @@
+//
+// TaskList - MainWindow.cpp
+// Copyright (c) George Burton 2012
+//
+// This file is released under the terms of the MIT License - you 
+//   can read more at opensource.org/licenses/mit-license.php
+//
+
+#include "MainWindow.h"
+
+#include <AppKit.h>
+#include <StorageKit.h>
+
+#include <stdio.h>
+
+enum
+{
+	M_ADD_ITEM = 'aitm',
+	M_SHOW_ABOUT = 'sabt'
+};
+
+MainWindow::MainWindow(void)
+	:	BWindow(BRect(0, 0, 100, 100), "TaskPad", B_DOCUMENT_WINDOW,
+								B_ASYNCHRONOUS_CONTROLS | B_QUIT_ON_WINDOW_CLOSE)
+{	
+	BRect b(Bounds());
+	BView *windowBack = new BView(b, "topview", B_FOLLOW_ALL, B_WILL_DRAW);
+	windowBack->SetViewColor(ui_color(B_PANEL_BACKGROUND_COLOR));
+	AddChild(windowBack);
+ 
+	addButton = new BButton(BRect(10, 10, 11, 11), "addbutton", "Add",
+								 new BMessage(M_ADD_ITEM),
+								 B_FOLLOW_TOP | B_FOLLOW_RIGHT);
+	addButton->ResizeToPreferred();
+	addButton->MoveTo(Bounds().right - addButton->Bounds().Width() - 
+					 (B_V_SCROLL_BAR_WIDTH / 4),
+					  Bounds().top + 3.0);
+		
+	itemEntryBox = new BTextControl(BRect(10, 10, 11, 11), "itementry", NULL, 
+									"", new BMessage(M_ADD_ITEM), B_FOLLOW_TOP | B_FOLLOW_LEFT, B_WILL_DRAW);
+	itemEntryBox->MoveTo(Bounds().left + (B_V_SCROLL_BAR_WIDTH / 4), 
+						 Bounds().top + 3.0);
+
+	BRect r(Bounds());
+	r.right -= B_V_SCROLL_BAR_WIDTH;
+	r.left += 1;
+	r.top += addButton->Bounds().Height() + 8.0;
+	r.bottom -= B_H_SCROLL_BAR_HEIGHT;
+	
+	itemListView = new BListView(r, "listview", B_SINGLE_SELECTION_LIST,
+								B_FOLLOW_ALL);
+	
+	BScrollView *scrollView = new BScrollView("scrollview", itemListView,
+												B_FOLLOW_ALL, 0, true, true);
+												
+	windowBack->AddChild(scrollView);
+	windowBack->AddChild(addButton);
+	windowBack->AddChild(itemEntryBox);
+	
+	SetSizeLimits(250, 30000, 150, 30000);
+	ResizeTo(400,300);
+	MoveTo((BScreen().Frame().Width() - Bounds().Width()) / 2.0,
+			BScreen().Frame().Height() / 4.0);
+	
+	LoadItems();
+}
+
+void
+MainWindow::FrameResized(float width, float height)
+{
+	itemEntryBox->ResizeTo(width - addButton->Bounds().Width() - 
+		(B_V_SCROLL_BAR_WIDTH / 2), addButton->Frame().Height());
+}
+
+bool
+MainWindow::QuitRequested(void)
+{
+	SerializeItems();
+	be_app->PostMessage(B_QUIT_REQUESTED);
+	return true;
+}
+
+void
+MainWindow::LoadItems(void)
+{
+	BPath listPath;
+	find_directory(B_USER_SETTINGS_DIRECTORY, &listPath);	
+	listPath.Append("TaskPad/ToDoItems");
+	
+	BMessage listItems;
+	BFile file(listPath.Path(), B_READ_ONLY);
+	if (file.InitCheck() == B_OK) {
+		listItems.Unflatten(&file);	
+	}
+	printf("items contained: %d\n", listItems.CountNames(B_STRING_TYPE));
+	
+	char *name;
+	uint32 type;
+	int32 count;
+	/*
+	for (int i=0; 
+		 i < listItems.CountNames(B_STRING_TYPE);
+		 i++) {
+		 printf("Item %d",i);
+		const char *name = "0"+i;
+		BStringItem *item = new BStringItem(listItems.FindString(name));
+		itemListView->AddItem(item);
+	}
+	*/
+}
+
+void
+MainWindow::SerializeItems(void)
+{
+	BPath listPath;
+	find_directory(B_USER_SETTINGS_DIRECTORY, &listPath);	
+	listPath.Append("TaskPad/ToDoItems");
+	
+	
+	
+	BMessage listItems;
+	for (int i = 0; i < itemListView->CountItems(); i++) {
+		BStringItem *item = dynamic_cast<BStringItem*>(
+											itemListView->ItemAt(i));
+		const char *name = "0"+i;
+		listItems.AddString(name,item->Text());
+		delete item;
+	}
+	printf("number of items: %d\n", itemListView->CountItems());
+	printf("items serialized: %d\n", listItems.CountNames(B_STRING_TYPE));
+	
+
+	BFile file(listPath.Path(), B_CREATE_FILE | B_ERASE_FILE | B_WRITE_ONLY);
+	if (file.InitCheck() == B_OK) {
+		listItems.Flatten(&file);
+	}
+}
+
+void
+MainWindow::MessageReceived(BMessage *message)
+{
+	switch(message->what)
+	{
+		case M_ADD_ITEM:
+		{
+			BString *itemText = new BString(itemEntryBox->Text());
+			itemText->Trim();
+			if (itemText->Length() <= 0) {
+				itemEntryBox->SetText("");
+				return;
+			}
+
+			BStringItem *item = new BStringItem(itemText->String()) ;
+			itemListView->AddItem(item);
+			itemEntryBox->SetText("");
+
+			delete itemText;
+			//SerializeItems();
+			break;
+		}
+
+		default:
+		{
+			BWindow::MessageReceived(message);
+			break;
+		}
+	}
+}

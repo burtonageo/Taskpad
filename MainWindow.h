@@ -22,10 +22,10 @@ public:
 	void	SerializeItems(void);
 	
 private:
-	BListView *itemListView;
+	BListView 	 *itemListView;
 	BTextControl *itemEntryBox;
-	BButton *addButton;
-	//itemArray[];
+	BButton		 *addButton;
+	BButton		 *removeButton;
 };
 
 #endif // MAINWINDOW_H

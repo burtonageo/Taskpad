@@ -16,6 +16,7 @@
 enum
 {
 	M_ADD_ITEM = 'aitm',
+	M_REMOVE_ITEM = 'ritm',
 	M_SHOW_ABOUT = 'sabt'
 };
 
@@ -35,10 +36,17 @@ MainWindow::MainWindow(void)
 	addButton->MoveTo(Bounds().right - addButton->Bounds().Width() - 
 					 (B_V_SCROLL_BAR_WIDTH / 4),
 					  Bounds().top + 3.0);
-		
+	
+	removeButton = new BButton(BRect(10, 10, 11, 11), "removebutton", "Remove",
+								 new BMessage(M_REMOVE_ITEM),
+								 B_FOLLOW_TOP | B_FOLLOW_LEFT);
+	removeButton->ResizeToPreferred();
+	removeButton->MoveTo(Bounds().left + 3,
+					  Bounds().top + 3.0);
+	
 	itemEntryBox = new BTextControl(BRect(10, 10, 11, 11), "itementry", NULL, 
 									"", new BMessage(M_ADD_ITEM), B_FOLLOW_TOP | B_FOLLOW_LEFT, B_WILL_DRAW);
-	itemEntryBox->MoveTo(Bounds().left + (B_V_SCROLL_BAR_WIDTH / 4), 
+	itemEntryBox->MoveTo(Bounds().left + removeButton->Bounds().Width() + (B_V_SCROLL_BAR_WIDTH / 4), 
 						 Bounds().top + 3.0);
 
 	BRect r(Bounds());
@@ -55,6 +63,7 @@ MainWindow::MainWindow(void)
 												
 	windowBack->AddChild(scrollView);
 	windowBack->AddChild(addButton);
+	windowBack->AddChild(removeButton);
 	windowBack->AddChild(itemEntryBox);
 	
 	SetSizeLimits(250, 30000, 150, 30000);
@@ -69,7 +78,8 @@ void
 MainWindow::FrameResized(float width, float height)
 {
 	itemEntryBox->ResizeTo(width - addButton->Bounds().Width() - 
-		(B_V_SCROLL_BAR_WIDTH / 2), addButton->Frame().Height());
+		removeButton->Bounds().Width() - (B_V_SCROLL_BAR_WIDTH / 2), 
+		addButton->Frame().Height());
 }
 
 bool
@@ -86,27 +96,20 @@ MainWindow::LoadItems(void)
 	BPath listPath;
 	find_directory(B_USER_SETTINGS_DIRECTORY, &listPath);	
 	listPath.Append("TaskPad/ToDoItems");
-	
+
 	BMessage listItems;
 	BFile file(listPath.Path(), B_READ_ONLY);
 	if (file.InitCheck() == B_OK) {
 		listItems.Unflatten(&file);	
 	}
-	printf("items contained: %d\n", listItems.CountNames(B_STRING_TYPE));
-	
-	char *name;
-	uint32 type;
-	int32 count;
-	/*
+
 	for (int i=0; 
 		 i < listItems.CountNames(B_STRING_TYPE);
 		 i++) {
-		 printf("Item %d",i);
 		const char *name = "0"+i;
 		BStringItem *item = new BStringItem(listItems.FindString(name));
 		itemListView->AddItem(item);
 	}
-	*/
 }
 
 void
@@ -115,9 +118,7 @@ MainWindow::SerializeItems(void)
 	BPath listPath;
 	find_directory(B_USER_SETTINGS_DIRECTORY, &listPath);	
 	listPath.Append("TaskPad/ToDoItems");
-	
-	
-	
+
 	BMessage listItems;
 	for (int i = 0; i < itemListView->CountItems(); i++) {
 		BStringItem *item = dynamic_cast<BStringItem*>(
@@ -126,9 +127,6 @@ MainWindow::SerializeItems(void)
 		listItems.AddString(name,item->Text());
 		delete item;
 	}
-	printf("number of items: %d\n", itemListView->CountItems());
-	printf("items serialized: %d\n", listItems.CountNames(B_STRING_TYPE));
-	
 
 	BFile file(listPath.Path(), B_CREATE_FILE | B_ERASE_FILE | B_WRITE_ONLY);
 	if (file.InitCheck() == B_OK) {
@@ -147,7 +145,7 @@ MainWindow::MessageReceived(BMessage *message)
 			itemText->Trim();
 			if (itemText->Length() <= 0) {
 				itemEntryBox->SetText("");
-				return;
+				break;
 			}
 
 			BStringItem *item = new BStringItem(itemText->String()) ;
@@ -155,7 +153,12 @@ MainWindow::MessageReceived(BMessage *message)
 			itemEntryBox->SetText("");
 
 			delete itemText;
-			//SerializeItems();
+			break;
+		}
+
+		case M_REMOVE_ITEM:
+		{
+			
 			break;
 		}
 

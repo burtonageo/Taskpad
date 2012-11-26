@@ -1,5 +1,5 @@
 //
-// TaskList - MainWindow.h
+// TaskPad - MainWindow.h
 // Copyright (c) George Burton 2012
 //
 // This file is released under the terms of the MIT License - you 
@@ -26,6 +26,7 @@ private:
 	BTextControl *itemEntryBox;
 	BButton		 *addButton;
 	BButton		 *removeButton;
+	BButton		 *aboutButton;
 };
 
 #endif // MAINWINDOW_H

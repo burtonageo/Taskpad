@@ -1,5 +1,5 @@
 //
-// TaskList - App.h
+// TaskPad - App.h
 // Copyright (c) George Burton 2012
 //
 // This file is released under the terms of the MIT License - you 

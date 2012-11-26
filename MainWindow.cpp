@@ -1,5 +1,5 @@
 //
-// TaskList - MainWindow.cpp
+// TaskPad - MainWindow.cpp
 // Copyright (c) George Burton 2012
 //
 // This file is released under the terms of the MIT License - you 
@@ -12,6 +12,8 @@
 #include <StorageKit.h>
 
 #include <stdio.h>
+
+#include "TaskList.h"
 
 enum
 {
@@ -43,6 +45,9 @@ MainWindow::MainWindow(void)
 	removeButton->ResizeToPreferred();
 	removeButton->MoveTo(Bounds().left + 3,
 					  Bounds().top + 3.0);
+					  
+	aboutButton = new BButton(BRect(10, 10, 11, 11), "aboutbutton", "About"B_UTF8_ELLIPSIS,
+								new BMessage(M_SHOW_ABOUT), B_FOLLOW_TOP | B_FOLLOW_LEFT);
 	
 	itemEntryBox = new BTextControl(BRect(10, 10, 11, 11), "itementry", NULL, 
 									"", new BMessage(M_ADD_ITEM), B_FOLLOW_TOP | B_FOLLOW_LEFT, B_WILL_DRAW);
@@ -66,8 +71,8 @@ MainWindow::MainWindow(void)
 	windowBack->AddChild(removeButton);
 	windowBack->AddChild(itemEntryBox);
 	
-	SetSizeLimits(250, 30000, 150, 30000);
-	ResizeTo(400,300);
+	SetSizeLimits(300, 30000, 150, 30000);
+	//ResizeTo(400,300);
 	MoveTo((BScreen().Frame().Width() - Bounds().Width()) / 2.0,
 			BScreen().Frame().Height() / 4.0);
 	
@@ -158,7 +163,17 @@ MainWindow::MessageReceived(BMessage *message)
 
 		case M_REMOVE_ITEM:
 		{
-			
+			itemListView->RemoveItem(
+					itemListView->CurrentSelection());
+			break;
+		}
+		
+		case M_SHOW_ABOUT:
+		{
+			BAlert *about = new BAlert("About"B_UTF8_ELLIPSIS, 
+				"A simple ToDo List for Haiku", "Close");
+		
+			about->Go();
 			break;
 		}
 

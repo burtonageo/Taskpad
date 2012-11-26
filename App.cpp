@@ -1,5 +1,5 @@
 //
-// TaskList - App.cpp
+// TaskPad - App.cpp
 // Copyright (c) George Burton 2012
 //
 // This file is released under the terms of the MIT License - you 
@@ -19,8 +19,8 @@ App::App(void)
 int
 main(int argc, char **argv)
 {
-	App *app = new App();
-	app->Run();
-	delete app;
+	//App *app = new App();
+	//app->Run();
+	//delete app;
 	return 0;
 }
